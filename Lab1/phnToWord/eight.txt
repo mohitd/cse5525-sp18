@@ -1,3 +1,4 @@
+0 0 SIL -
 0 1 ey -
 1 2 t EIGHT
 2 2 SIL -
