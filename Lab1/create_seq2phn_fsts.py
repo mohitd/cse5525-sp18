@@ -2,9 +2,9 @@
 # Mohit Deshpande
 
 fst_template = """0 1 {0} -
-1 2 {0} -
+1 2 {0} - 
 2 3 {0} {0}
-3 3 {0} -
+3 3 {0} - 0.3010299957
 3"""
 
 with open('prob2/phn.voc') as f:

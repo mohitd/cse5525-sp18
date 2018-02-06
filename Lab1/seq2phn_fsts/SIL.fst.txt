@@ -1,5 +1,5 @@
 0 1 SIL -
-1 2 SIL -
+1 2 SIL - 
 2 3 SIL SIL
-3 3 SIL -
+3 3 SIL - 0.3010299957
 3
