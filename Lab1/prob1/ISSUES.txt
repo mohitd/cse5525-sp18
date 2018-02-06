@@ -1,0 +1,57 @@
+BASE FILES:
+
+*combo.fst.txt - converts initial outputs to final output based on the following strategy:
+
+ONE-PAIR                     = ONE-PAIR
+ONE-PAIR + ONE-PAIR          = TWO-PAIR
+THREE-OF-A-KIND              = THREE-OF-A-KIND
+STRAIGHT                     = STRAIGHT
+ROYAL-STRAIGHT-FLUSH         = STRAIGHT (see royal.fst.txt for why)
+FLUSH                        = FLUSH
+ONE-PAIR + THREE-OF-A-KIND   = FULL-HOUSE
+THREE-OF-A-KIND + ONE-PAIR   = FULL-HOUSE
+FOUR-OF-A-KIND               = FOUR-OF-A-KIND
+STRAIGHT + FLUSH             = STRAIGHT-FLUSH
+ROYAL-STRAIGHT-FLUSH + FLUSH = ROYAL-STRAIGHT-FLUSH
+
+Edges in combo.fst are weighted to force shortest paths to prefer better hand types
+(though it's possible I have them in the reverse order, didn't get far enough to check)
+
+*flushornot.fst.txt - outputs "FLUSH" if suit portion is a flush,
+                      otherwise nothing
+
+*fourkind.fst.txt - outputs "FOUR-OF-A-KIND" if rank portion contains a 4kind,
+                    otherwise nothing
+
+*pair.fst.txt - outputs "ONE-PAIR" if rank portion contains a pair, otherwise nothing
+
+*royal.fst.txt - outputs "ROYAL-STRAIGHT-FLUSH" if rank portion is a straight starting with TEN,
+                 otherwise nothing
+--Yes, this is hacky. Would have preferred to create an intermediate symbol like
+"ROYAL-STRAIGHT," but we're not allowed to modify the .voc files
+
+*straight.fst.txt - outputs "STRAIGHT" if rank portion is a straight NOT starting with TEN,
+                    otherwise nothing
+
+*threekind.fst.txt - outputs "THREE-OF-A-KIND" if rank portion contains a 3kind,
+                     otherwise nothing
+
+COMPOSITION STRATEGY:
+
+1. concatenate pair.fst + pair.fst to produce twopair.fst
+2. concatenate pair.fst + threekind.fst to produce fh1.fst
+3. concatenate threekind.fst + pair.fst to produce fh2.fst
+4. union fh1.fst and fh2.fst to produce fullhouse.fst
+5. union pair.fst, twopair.fst, threekind.fst, straight.fst, royal.fst, fullhouse.fst,
+         and fourkind.fst to produce rankrules.fst
+6. concatenate rankrules.fst + flushornot.fst to produce allrules.fst
+7. compose allrules.fst with combo.fst to produce handscorer.fst
+8. compose input hand fsa's with handscorer.fst, run shortestpath on the results
+
+PROBLEMS:
+
+1. Somehow in the composition portion, some EPSILON->EPSILON transitions are introduced.
+This is a problem because cards.voc does not include EPSILON as a symbol (was this an
+oversight by the prof, or is it supposed to be like this?)
+
+2. Composing test fsa's with handscorer.fst always produces empty fst's, not sure why
