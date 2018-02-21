@@ -99,28 +99,29 @@ if __name__ == '__main__':
     for t1 in word_given_tag_counts:
         for wd in word_given_tag_counts[t1]:
             words.add(wd)
-    tags = set()
+
+    tag_counts = Counter()
     for t1 in tag_given_tag_counts:
-        for t2 in tag_given_tag_counts[t1]:
-            tags.add(t1)
-            tags.add(t2)
+        tag_counts[t1] += sum(tag_given_tag_counts[t1][t2] for t2 in tag_given_tag_counts)
+
+    tag_counts['</s>'] += sum(tag_given_tag_counts[t1]['</s>'] for t1 in tag_given_tag_counts)
 
     transition_model = dict()
-    for t1 in tags:
+    for t1 in tag_counts:
         transition_model[t1] = dict()
-        for t2 in tags:
+        for t2 in tag_counts:
             transition_model[t1][t2] = float('-inf')
 
-    for tag in tag_given_tag_counts:
-        for tag_next in tag_given_tag_counts[tag]:
-            if tag_given_tag_counts[tag][tag_next] != 0:
-                transition_model[tag][tag_next] = math.log(tag_given_tag_counts[tag][tag_next]) - math.log(sum(tag_given_tag_counts[tag][x] for x in tag_given_tag_counts[tag]))
+    for tag_prev in tag_given_tag_counts:
+        for tag_next in tag_given_tag_counts[tag_prev]:
+            if tag_given_tag_counts[tag_prev][tag_next] != 0:
+                transition_model[tag_prev][tag_next] = math.log(tag_given_tag_counts[tag_prev][tag_next]) - math.log(tag_counts[tag_prev])
 
     with open('transition_model.pkl', 'wb') as f:
         pickle.dump(transition_model, f)
 
     emission_model = dict()
-    for t in tags:
+    for t in tag_counts:
         emission_model[t] = dict()
         for wd in words:
             emission_model[t][wd] = float('-inf')
@@ -128,7 +129,7 @@ if __name__ == '__main__':
     for tag in word_given_tag_counts:
         for word in word_given_tag_counts[tag]:
             if word_given_tag_counts[tag][word] != 0:
-                emission_model[tag][word] = math.log(word_given_tag_counts[tag][word]) - math.log(sum(word_given_tag_counts[tag][w] for w in word_given_tag_counts[tag]))
+                emission_model[tag][word] = math.log(word_given_tag_counts[tag][word]) - math.log(tag_counts[tag])
 
     with open('emission_model.pkl', 'wb') as f:
         pickle.dump(emission_model, f)
