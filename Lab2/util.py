@@ -92,6 +92,13 @@ def load_testing_data():
 
     return testing_data
 
+def accuracy(obs, pred):
+    acc = 0.
+    for i in range(len(obs)):
+        acc += obs[i][1] == pred[i]
+
+    return acc / len(obs)
+
 if __name__ == '__main__':
     tag_given_tag_counts, word_given_tag_counts = load_training_data()
 
