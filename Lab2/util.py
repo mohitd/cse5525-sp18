@@ -5,6 +5,36 @@ import pickle
 # this is an example of how to parse the POS tag file and get counts
 # needed for a bigram tagger 
 
+def load_untagged_data():
+    """Returns list of sentences from training data, each of which is a list of words without tags
+    """
+
+    sentences = []
+
+    with open("pos_train.txt","r") as infile:
+        for line in infile:
+            
+            sentence = []
+            
+            #
+            # split line into word/tag pairs
+            #
+            for wordtag in line.rstrip().split(" "):
+                if wordtag == "":
+                    continue
+                # note that you might have escaped slashes
+                # 1\/2/CD means "1/2" "CD"
+                # keep 1/2 as 1\/2 
+                parts = wordtag.split("/")
+                parts.pop()
+                word = "/".join(parts)
+                # add word to sentence
+                sentence.append(word)
+            # add sentence to sentence list
+            sentences.append(sentence)
+        
+    return sentences
+
 def load_training_data():
     """Returns transition and emission counts, respectively
     """
