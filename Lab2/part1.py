@@ -4,6 +4,7 @@ from util import load_models, load_testing_data, load_untagged_data, accuracy
 # (in which case, I guess just copy over the vit_dec declaration from part0?)
 #from part0 import viterbi_decoding
 from math import log
+from collections import defaultdict
 import random
 
 def random_init(model):
@@ -123,6 +124,67 @@ def backward(sentences, tags, transition_model, emission_model):
 
     return beta
 
+def maximize(alpha, beta, tags, sentence, emission, transition):
+    """Returns updated Emission and Tranisition 
+    models based on Expectation iterations"""
+    
+    obs = emission.values()[0].keys()
+    prob_state_obs = {}
+ 
+    #compute sum: alpha(s)*beta(s) and init P(->S,): COL L-Q on Eisner
+    tot_prob = 0.0
+    for key in tags:
+        tot_prob += alpha[0][key] * beta[0][key]
+        prob_state_obs[key] = {}
+        for val in obs:
+            prob_state_obs[key][val] = 0
+        
+    #compute p(->S), J and K columns in Eisner spreadsheet
+    prob_state = {} 
+    state_sums = {}
+    state_sums = defaultdict(lambda:0,state_sums)
+    for i in range(len(alpha)):
+        for key in tags:
+            prob_state[key] = (alpha[i][key] * beta[i][key]) / tot_prob
+            state_sums[key] += prob_state[key]
+            prob_state_obs[key][sentence[0][i]] += prob_state[key]
+            
+    #compute sum of p(S->S'): columns R S T U in Eisner
+    tran_sums = {}
+    for tag1 in tags:
+        tran_sums[tag1] = {}
+        for tag2 in tags:
+            tran_sums[tag1][tag2] = 0
+            for i in range(1, len(alpha)):     
+                tran_sums[tag1][tag2] += (alpha[i-1][tag1] * beta[i][tag2] 
+                        * transition[tag1][tag2] * emission[tag2][sentence[0][i]] 
+                        / tot_prob)
+            
+    #Update Emission mode: P(O,S) / P(S)
+    for key in tags:
+        for val in obs:
+            emission[key][val] = prob_state_obs[key][val] / state_sums[key]
+            
+    #update Transition model: a[t-1](S)* b[t](S) * P(S'|S) * P(O|S) / Tot_Prob
+    for tag1 in tags:
+        for tag2 in transition.values()[0]:
+            if (tag2 == '</s>'):
+                last_prod = (alpha[len(alpha)-1][tag1] * beta[len(beta)-1][tag1]) / tot_prob 
+                transition[tag1][tag2] = last_prod / state_sums[tag1]
+            else:
+                transition[tag1][tag2] = tran_sums[tag1][tag2] / state_sums[tag1]
+    
+    #Round about way of setting the start tag transition prob's.
+    #Attempted to make it scale
+    start_tag = [item for item in transition.keys() if item not in tags]
+    for tag1 in start_tag:
+        for tag2 in transition.values()[0]:
+            if(tag2 not in transition.keys()):
+                transition[tag1][tag2] = 0
+            else:
+                transition[tag1][tag2] = (alpha[0][tag2] * beta[0][tag2]) / tot_prob
+              
+    
 # ice cream example data
 # TODO: remove when finished with testing
 ic_sentence = [['2', '3', '3', '2', '3', '2', '3', '2', '2', '3', '1', '3', '3', '1', '1', '1', '2', '1', '1', '1', '3', '1', '2', '1', '1', '1', '2', '3', '3', '2', '3', '2', '2']]
@@ -140,9 +202,20 @@ ic_emi = {'C':{'1':0.7,'2':0.2,'3':0.1},'H':{'1':0.1,'2':0.2,'3':0.7}}
 #avg_acc = 0.
 
 # TODO: remove when finished with testing
-ic_beta = backward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
-for thingy in ic_beta:
-    print thingy
+test_iter = 10
+for i in range(test_iter):
+    ic_alpha = forward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
+    ic_beta = backward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
+    maximize(ic_alpha, ic_beta, ic_tags, ic_sentence, ic_emi, ic_trans)
+    
+print("Emissions model: ")
+for item in ic_emi.keys():
+    print(item)
+    print(ic_emi[item])
+print("\nTransition model:")
+for item in ic_trans:
+    print(item)
+    print(ic_trans[item])
 
 # run the forward-backward algorithm
 num_iter = 0 # TODO: set to 10 (or whatever) (or use convergence test instead)
@@ -150,6 +223,7 @@ for i in range (0, num_iter):
     alpha = forward(sentences, tags, fb_transition_model, fb_emission_model)
     beta = backward(sentences, tags, fb_transition_model, fb_emission_model)
     # TODO: maximization step: update fb models using alpha & beta probs
+    
 
 # TODO: add back in    
 # final step: same as part 0, except using models learned from fb algorithm
