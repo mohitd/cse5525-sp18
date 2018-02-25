@@ -124,7 +124,7 @@ def backward(sentences, tags, transition_model, emission_model):
 
     return beta
 
-def maximize(alpha, beta, tags, sentence, emission, transition):
+def maximize(alpha, beta, tags, sentences, emission, transition):
     """Returns updated Emission and Tranisition 
     models based on Expectation iterations"""
     
@@ -143,22 +143,24 @@ def maximize(alpha, beta, tags, sentence, emission, transition):
     prob_state = {} 
     state_sums = {}
     state_sums = defaultdict(lambda:0,state_sums)
-    for i in range(len(alpha)):
-        for key in tags:
-            prob_state[key] = (alpha[i][key] * beta[i][key]) / tot_prob
-            state_sums[key] += prob_state[key]
-            prob_state_obs[key][sentence[0][i]] += prob_state[key]
+    for sentence in sentences:
+        for i in range(len(alpha)):
+            for key in tags:
+                prob_state[key] = (alpha[i][key] * beta[i][key]) / tot_prob
+                state_sums[key] += prob_state[key]
+                prob_state_obs[key][sentence[i]] += prob_state[key]
             
     #compute sum of p(S->S'): columns R S T U in Eisner
     tran_sums = {}
-    for tag1 in tags:
-        tran_sums[tag1] = {}
-        for tag2 in tags:
-            tran_sums[tag1][tag2] = 0
-            for i in range(1, len(alpha)):     
-                tran_sums[tag1][tag2] += (alpha[i-1][tag1] * beta[i][tag2] 
-                        * transition[tag1][tag2] * emission[tag2][sentence[0][i]] 
-                        / tot_prob)
+    for sentence in sentences:
+        for tag1 in tags:
+            tran_sums[tag1] = {}
+            for tag2 in tags:
+                tran_sums[tag1][tag2] = 0
+                for i in range(1, len(alpha)):     
+                    tran_sums[tag1][tag2] += (alpha[i-1][tag1] * beta[i][tag2] 
+                            * transition[tag1][tag2] * emission[tag2][sentence[i]] 
+                            / tot_prob)
             
     #Update Emission mode: P(O,S) / P(S)
     for key in tags:
@@ -187,49 +189,52 @@ def maximize(alpha, beta, tags, sentence, emission, transition):
     
 # ice cream example data
 # TODO: remove when finished with testing
-ic_sentence = [['2', '3', '3', '2', '3', '2', '3', '2', '2', '3', '1', '3', '3', '1', '1', '1', '2', '1', '1', '1', '3', '1', '2', '1', '1', '1', '2', '3', '3', '2', '3', '2', '2']]
-ic_tags = ['C', 'H']
-ic_trans = {'<s>':{'C':0.5,'H':0.5,'</s>':0.0},'C':{'C':0.8,'H':0.1,'</s>':0.1},'H':{'C':0.1,'H':0.8,'</s>':0.1}}
-ic_emi = {'C':{'1':0.7,'2':0.2,'3':0.1},'H':{'1':0.1,'2':0.2,'3':0.7}}
+#ic_sentence = [['2', '3', '3', '2', '3', '2', '3', '2', '2', '3', '1', '3', '3', '1', '1', '1', '2', '1', '1', '1', '3', '1', '2', '1', '1', '1', '2', '3', '3', '2', '3', '2', '2']]
+#ic_tags = ['C', 'H']
+#ic_trans = {'<s>':{'C':0.5,'H':0.5,'</s>':0.0},'C':{'C':0.8,'H':0.1,'</s>':0.1},'H':{'C':0.1,'H':0.8,'</s>':0.1}}
+#ic_emi = {'C':{'1':0.7,'2':0.2,'3':0.1},'H':{'1':0.1,'2':0.2,'3':0.7}}
 
 # TODO: add back in
-#transition_model, emission_model = load_models()
-#fb_transition_model = random_init(transition_model)
-#fb_emission_model = random_init(emission_model)
-#sentences = load_untagged_data()
-#testing_data = load_testing_data()
-#tags = list(transition_model.keys())
-#avg_acc = 0.
+transition_model, emission_model = load_models()
+fb_transition_model = random_init(transition_model)
+fb_emission_model = random_init(emission_model)
+sentences = load_untagged_data()
+testing_data = load_testing_data()
+tags = list(transition_model.keys())
+avg_acc = 0.
 
 # TODO: remove when finished with testing
-test_iter = 10
-for i in range(test_iter):
-    ic_alpha = forward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
-    ic_beta = backward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
-    maximize(ic_alpha, ic_beta, ic_tags, ic_sentence, ic_emi, ic_trans)
-    
-print("Emissions model: ")
-for item in ic_emi.keys():
-    print(item)
-    print(ic_emi[item])
-print("\nTransition model:")
-for item in ic_trans:
-    print(item)
-    print(ic_trans[item])
+#test_iter = 10
+#for i in range(test_iter):
+#    ic_alpha = forward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
+#    ic_beta = backward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
+#    maximize(ic_alpha, ic_beta, ic_tags, ic_sentence, ic_emi, ic_trans)
+#    
+#print("Emissions model: ")
+#for item in ic_emi.keys():
+#    print(item)
+#    print(ic_emi[item])
+#print("\nTransition model:")
+#for item in ic_trans:
+#    print(item)
+#    print(ic_trans[item])
 
 # run the forward-backward algorithm
-num_iter = 0 # TODO: set to 10 (or whatever) (or use convergence test instead)
+num_iter = 1 # TODO: set to 10 (or whatever) (or use convergence test instead)
 for i in range (0, num_iter):
+    print("Starting alpha")
     alpha = forward(sentences, tags, fb_transition_model, fb_emission_model)
+    print("Starting beta")
     beta = backward(sentences, tags, fb_transition_model, fb_emission_model)
-    # TODO: maximization step: update fb models using alpha & beta probs
+    print("Starting max")
+    maximize(alpha, beta, tags, sentences, fb_emission_model, fb_transition_model)
     
 
 # TODO: add back in    
 # final step: same as part 0, except using models learned from fb algorithm
-##for example in testing_data:
-##    words = list(zip(*example))[0]
-##    pred = viterbi_decoding(words, tags, fb_transition_model, fb_emission_model)
-##    avg_acc += accuracy(example, pred)
-##
-##print('Accuracy: {}'.format(avg_acc / len(testing_data)))
+#for example in testing_data:
+#    words = list(zip(*example))[0]
+#    pred = viterbi_decoding(words, tags, fb_transition_model, fb_emission_model)
+#    avg_acc += accuracy(example, pred)
+#
+#print('Accuracy: {}'.format(avg_acc / len(testing_data)))
