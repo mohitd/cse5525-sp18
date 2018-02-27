@@ -124,6 +124,71 @@ def backward(sentences, tags, transition_model, emission_model):
 
     return beta
 
+def baum_welch(alpha, beta, tags, sentences, transition, emission):
+    """Runs Baum-Welch algorithm for 1 iteration
+    
+    Arguments:
+        alpha {list of list of dict} -- alpha values from forward
+        beta {list of list of dict} -- beta values from backward
+        tags {[type]} -- [description]
+        sentences {[type]} -- [description]
+        transition {[type]} -- [description]
+        emission {[type]} -- [description]
+    """
+
+    """
+    E-step
+    """
+
+    # gamma
+    # indexed by example, time-step of example, and state
+    gamma = []
+    for x in range(len(sentences)):
+        gamma_x = []
+        for t in range(len(sentences[x])):
+            gamma_x_t = {}
+            for j in tags:
+                gamma_x_t[j] = alpha[x][t][j] * beta[x][t][j] / alpha[x][-1][0]
+            gamma_x.append(gamma_x_t)
+        gamma.append(gamma_x)
+
+    # xi
+    # index by example, time-step of example, start, and end state
+    xi = []
+    for x in range(len(sentences)):
+        xi_x = []
+        for t in range(len(sentences[x])):
+            xi_x_t = []
+            for i in tags:
+                xi_x_t_i = {}
+                for j in tags:
+                    xi_x_t_i[j]
+        xi.append(xi_x)
+
+    """
+    M-step
+    """
+    # transition model
+    # normalization constants (indexed by i)
+    Z = {}
+    for i in tags:
+        z = 0.
+        for x in range(len(sentences)):
+            for t in range(len(sentences[x])):
+                for k in tags:
+                    z += xi[x][t][i][k]
+        Z[i] = z
+
+    for i in tags:
+        for j in tags:
+            new_aij = 0.
+            for x in range(len(sentences)):
+                for t in range(len(sentences[x])):
+                    new_aij += xi[x][t][i][j]
+            new_aij = new_aij / Z[i]
+            transition_model[i][j] = new_aij
+
+
 def maximize(alpha, beta, tags, sentences, emission, transition):
     """Returns updated Emission and Tranisition 
     models based on Expectation iterations"""
