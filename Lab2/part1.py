@@ -1,10 +1,7 @@
 from util import load_models, load_testing_data, load_untagged_data, accuracy
-# TODO: add this back in
-# (unless it turns out I have misunderstood how python imports work)
-# (in which case, I guess just copy over the vit_dec declaration from part0?)
-#from part0 import viterbi_decoding
 from math import log
 from collections import defaultdict
+from part0 import viterbi_decoding
 import random
 
 def random_init(model):
@@ -124,70 +121,6 @@ def backward(sentences, tags, transition_model, emission_model):
 
     return beta
 
-def baum_welch(alpha, beta, tags, sentences, transition, emission):
-    """Runs Baum-Welch algorithm for 1 iteration
-    
-    Arguments:
-        alpha {list of list of dict} -- alpha values from forward
-        beta {list of list of dict} -- beta values from backward
-        tags {[type]} -- [description]
-        sentences {[type]} -- [description]
-        transition {[type]} -- [description]
-        emission {[type]} -- [description]
-    """
-
-    """
-    E-step
-    """
-
-    # gamma
-    # indexed by example, time-step of example, and state
-    gamma = []
-    for x in range(len(sentences)):
-        gamma_x = []
-        for t in range(len(sentences[x])):
-            gamma_x_t = {}
-            for j in tags:
-                gamma_x_t[j] = alpha[x][t][j] * beta[x][t][j] / sum(alpha[x][-1][0])
-            gamma_x.append(gamma_x_t)
-        gamma.append(gamma_x)
-
-    # xi
-    # index by example, time-step of example, start, and end state
-    xi = []
-    for x in range(len(sentences)):
-        xi_x = []
-        for t in range(len(sentences[x])):
-            xi_x_t = []
-            for i in tags:
-                xi_x_t_i = {}
-                for j in tags:
-                    xi_x_t_i[j]
-        xi.append(xi_x)
-
-    """
-    M-step
-    """
-    # transition model
-    # normalization constants (indexed by i)
-    Z = {}
-    for i in tags:
-        z = 0.
-        for x in range(len(sentences)):
-            for t in range(len(sentences[x])):
-                for k in tags:
-                    z += xi[x][t][i][k]
-        Z[i] = z
-
-    for i in tags:
-        for j in tags:
-            new_aij = 0.
-            for x in range(len(sentences)):
-                for t in range(len(sentences[x])):
-                    new_aij += xi[x][t][i][j]
-            new_aij = new_aij / Z[i]
-            transition_model[i][j] = new_aij
-
 
 def maximize(alpha, beta, tags, sentences, emission, transition):
     """Returns updated Emission and Tranisition 
@@ -268,13 +201,6 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
                 transition[tag1][tag2] = (alpha[0][0][tag2] * beta[0][0][tag2]) / (sum(tot_prob) / len(alpha))
               
     
-# ice cream example data
-# TODO: remove when finished with testing
-#ic_sentence = [['2', '3', '3', '2', '3', '2', '3', '2', '2', '3', '1', '3', '3', '1', '1', '1', '2', '1', '1', '1', '3', '1', '2', '1', '1', '1', '2', '3', '3', '2', '3', '2', '2']]
-#ic_tags = ['C', 'H']
-#ic_trans = {'<s>':{'C':0.5,'H':0.5,'</s>':0.0},'C':{'C':0.8,'H':0.1,'</s>':0.1},'H':{'C':0.1,'H':0.8,'</s>':0.1}}
-#ic_emi = {'C':{'1':0.7,'2':0.2,'3':0.1},'H':{'1':0.1,'2':0.2,'3':0.7}}
-
 # TODO: add back in
 transition_model, emission_model = load_models()
 fb_transition_model = random_init(transition_model)
@@ -284,24 +210,9 @@ testing_data = load_testing_data()
 tags = list(transition_model.keys())
 avg_acc = 0.
 
-# TODO: remove when finished with testing
-#test_iter = 10
-#for i in range(test_iter):
-#    ic_alpha = forward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
-#    ic_beta = backward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
-#    maximize(ic_alpha, ic_beta, ic_tags, ic_sentence, ic_emi, ic_trans)
-#    
-#print("Emissions model: ")
-#for item in ic_emi.keys():
-#    print(item)
-#    print(ic_emi[item])
-#print("\nTransition model:")
-#for item in ic_trans:
-#    print(item)
-#    print(ic_trans[item])
 
 # run the forward-backward algorithm
-sentences = sentences[0:10]
+sentences = sentences[0:500]
 num_iter = 1 # TODO: set to 10 (or whatever) (or use convergence test instead)
 for i in range (0, num_iter):
     print("Starting alpha")
@@ -314,9 +225,9 @@ for i in range (0, num_iter):
 
 # TODO: add back in    
 # final step: same as part 0, except using models learned from fb algorithm
-#for example in testing_data:
-#    words = list(zip(*example))[0]
-#    pred = viterbi_decoding(words, tags, fb_transition_model, fb_emission_model)
-#    avg_acc += accuracy(example, pred)
-#
-#print('Accuracy: {}'.format(avg_acc / len(testing_data)))
+for example in testing_data:
+    words = list(zip(*example))[0]
+    pred = viterbi_decoding(words, tags, fb_transition_model, fb_emission_model)
+    avg_acc += accuracy(example, pred)
+
+print('Accuracy: {}'.format(avg_acc / len(testing_data)))
