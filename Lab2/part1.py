@@ -128,7 +128,7 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
     """Returns updated Emission and Tranisition 
     models based on Expectation iterations"""
     
-    obs = emission.values()[0].keys()
+    obs = list(emission.values())[0].keys()
     prob_state_obs = {}
  
     #compute sum: alpha(s)*beta(s) and init P(->S,): COL L-Q on Eisner
@@ -169,7 +169,7 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
             
     #update Transition model: a[t-1](S)* b[t](S) * P(S'|S) * P(O|S) / Tot_Prob
     for tag1 in tags:
-        for tag2 in transition.values()[0]:
+        for tag2 in list(transition.values())[0]:
             if (tag2 == '</s>'):
                 last_prod = (alpha[len(alpha)-1][tag1] * beta[len(beta)-1][tag1]) / tot_prob 
                 transition[tag1][tag2] = last_prod / state_sums[tag1]
@@ -180,7 +180,7 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
     #Attempted to make it scale
     start_tag = [item for item in transition.keys() if item not in tags]
     for tag1 in start_tag:
-        for tag2 in transition.values()[0]:
+        for tag2 in list(transition.values())[0]:
             if(tag2 not in transition.keys()):
                 transition[tag1][tag2] = 0
             else:
@@ -189,10 +189,10 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
     
 # ice cream example data
 # TODO: remove when finished with testing
-#ic_sentence = [['2', '3', '3', '2', '3', '2', '3', '2', '2', '3', '1', '3', '3', '1', '1', '1', '2', '1', '1', '1', '3', '1', '2', '1', '1', '1', '2', '3', '3', '2', '3', '2', '2']]
-#ic_tags = ['C', 'H']
-#ic_trans = {'<s>':{'C':0.5,'H':0.5,'</s>':0.0},'C':{'C':0.8,'H':0.1,'</s>':0.1},'H':{'C':0.1,'H':0.8,'</s>':0.1}}
-#ic_emi = {'C':{'1':0.7,'2':0.2,'3':0.1},'H':{'1':0.1,'2':0.2,'3':0.7}}
+ic_sentence = [['2', '3', '3', '2', '3', '2', '3', '2', '2', '3', '1', '3', '3', '1', '1', '1', '2', '1', '1', '1', '3', '1', '2', '1', '1', '1', '2', '3', '3', '2', '3', '2', '2']]
+ic_tags = ['C', 'H']
+ic_trans = {'<s>':{'C':0.5,'H':0.5,'</s>':0.0},'C':{'C':0.8,'H':0.1,'</s>':0.1},'H':{'C':0.1,'H':0.8,'</s>':0.1}}
+ic_emi = {'C':{'1':0.7,'2':0.2,'3':0.1},'H':{'1':0.1,'2':0.2,'3':0.7}}
 
 # TODO: add back in
 transition_model, emission_model = load_models()
@@ -204,30 +204,30 @@ tags = list(transition_model.keys())
 avg_acc = 0.
 
 # TODO: remove when finished with testing
-#test_iter = 10
-#for i in range(test_iter):
-#    ic_alpha = forward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
-#    ic_beta = backward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
-#    maximize(ic_alpha, ic_beta, ic_tags, ic_sentence, ic_emi, ic_trans)
-#    
-#print("Emissions model: ")
-#for item in ic_emi.keys():
-#    print(item)
-#    print(ic_emi[item])
-#print("\nTransition model:")
-#for item in ic_trans:
-#    print(item)
-#    print(ic_trans[item])
+test_iter = 10
+for i in range(test_iter):
+    ic_alpha = forward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
+    ic_beta = backward(ic_sentence, ic_tags, ic_trans, ic_emi)[0]
+    maximize(ic_alpha, ic_beta, ic_tags, ic_sentence, ic_emi, ic_trans)
+    
+print("Emissions model: ")
+for item in ic_emi.keys():
+    print(item)
+    print(ic_emi[item])
+print("\nTransition model:")
+for item in ic_trans:
+    print(item)
+    print(ic_trans[item])
 
 # run the forward-backward algorithm
-num_iter = 1 # TODO: set to 10 (or whatever) (or use convergence test instead)
-for i in range (0, num_iter):
-    print("Starting alpha")
-    alpha = forward(sentences, tags, fb_transition_model, fb_emission_model)
-    print("Starting beta")
-    beta = backward(sentences, tags, fb_transition_model, fb_emission_model)
-    print("Starting max")
-    maximize(alpha, beta, tags, sentences, fb_emission_model, fb_transition_model)
+#num_iter = 1 # TODO: set to 10 (or whatever) (or use convergence test instead)
+#for i in range (0, num_iter):
+#    print("Starting alpha")
+#    alpha = forward(sentences, tags, fb_transition_model, fb_emission_model)
+#    print("Starting beta")
+#    beta = backward(sentences, tags, fb_transition_model, fb_emission_model)
+#    print("Starting max")
+#    maximize(alpha, beta, tags, sentences, fb_emission_model, fb_transition_model)
     
 
 # TODO: add back in    
