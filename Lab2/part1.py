@@ -128,39 +128,48 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
     """Returns updated Emission and Tranisition 
     models based on Expectation iterations"""
     
-    obs = emission.values()[0].keys()
+    obs = list(list(emission.values())[0].keys())
     prob_state_obs = {}
  
-    #compute sum: alpha(s)*beta(s) and init P(->S,): COL L-Q on Eisner
-    tot_prob = 0.0
+    #init P(->S,): COL L-Q on Eisner
     for key in tags:
-        tot_prob += alpha[0][key] * beta[0][key]
         prob_state_obs[key] = {}
         for val in obs:
             prob_state_obs[key][val] = 0
+    
+    #compute sum: alpha(s)*beta(s) and 
+    tot_prob = 0.0 
+    for sentence_num in range(len(alpha)):
+        for word in range(len(sentences[sentence_num])):
+            for key in tags:
+                tot_prob += alpha[sentence_num][word][key] * beta[sentence_num][word][key]
         
-    #compute p(->S), J and K columns in Eisner spreadsheet
+    #compute p(->S), 
     prob_state = {} 
     state_sums = {}
     state_sums = defaultdict(lambda:0,state_sums)
-    for sentence in sentences:
-        for i in range(len(alpha)):
-            for key in tags:
-                prob_state[key] = (alpha[i][key] * beta[i][key]) / tot_prob
+    for sentence_num in range(len(alpha)):
+        for word in range(len(sentences[sentence_num])):
+            for key in tags:    
+                #This is (cols) G / I and H / I in Eisner
+                prob_state[key] = (alpha[sentence_num][word][key] * beta[sentence_num][word][key]) / tot_prob
+                #Sum of the column
                 state_sums[key] += prob_state[key]
-                prob_state_obs[key][sentence[i]] += prob_state[key]
-            
+                #P(->S,o) columns L-Q
+                prob_state_obs[key][sentences[sentence_num][word]] += prob_state[key]
+                
+
     #compute sum of p(S->S'): columns R S T U in Eisner
     tran_sums = {}
-    for sentence in sentences:
-        for tag1 in tags:
-            tran_sums[tag1] = {}
-            for tag2 in tags:
-                tran_sums[tag1][tag2] = 0
-                for i in range(1, len(alpha)):     
-                    tran_sums[tag1][tag2] += (alpha[i-1][tag1] * beta[i][tag2] 
-                            * transition[tag1][tag2] * emission[tag2][sentence[i]] 
-                            / tot_prob)
+    for tag1 in tags:
+        tran_sums[tag1] = {}
+        for tag2 in tags:
+            tran_sums[tag1][tag2] = 0
+            for sentence_num in range(1, len(alpha)):     
+                for word in range(len(sentences[sentence_num])):
+                    tran_sums[tag1][tag2] += (beta[sentence_num][word][tag2] 
+                    * transition[tag1][tag2] * emission[tag2][sentences[sentence_num][word]] 
+                    / tot_prob)
             
     #Update Emission mode: P(O,S) / P(S)
     for key in tags:
@@ -169,9 +178,9 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
             
     #update Transition model: a[t-1](S)* b[t](S) * P(S'|S) * P(O|S) / Tot_Prob
     for tag1 in tags:
-        for tag2 in transition.values()[0]:
+        for tag2 in list(transition.values())[0]:
             if (tag2 == '</s>'):
-                last_prod = (alpha[len(alpha)-1][tag1] * beta[len(beta)-1][tag1]) / tot_prob 
+                last_prod = (alpha[len(alpha)-1][0][tag1] * beta[len(beta)-1][0][tag1]) / tot_prob 
                 transition[tag1][tag2] = last_prod / state_sums[tag1]
             else:
                 transition[tag1][tag2] = tran_sums[tag1][tag2] / state_sums[tag1]
@@ -180,11 +189,11 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
     #Attempted to make it scale
     start_tag = [item for item in transition.keys() if item not in tags]
     for tag1 in start_tag:
-        for tag2 in transition.values()[0]:
+        for tag2 in list(transition.values())[0]:
             if(tag2 not in transition.keys()):
                 transition[tag1][tag2] = 0
             else:
-                transition[tag1][tag2] = (alpha[0][tag2] * beta[0][tag2]) / tot_prob
+                transition[tag1][tag2] = (alpha[0][0][tag2] * beta[0][0][tag2]) / tot_prob
               
     
 # ice cream example data
@@ -220,6 +229,7 @@ avg_acc = 0.
 #    print(ic_trans[item])
 
 # run the forward-backward algorithm
+sentences = sentences[0:10]
 num_iter = 1 # TODO: set to 10 (or whatever) (or use convergence test instead)
 for i in range (0, num_iter):
     print("Starting alpha")
@@ -227,7 +237,7 @@ for i in range (0, num_iter):
     print("Starting beta")
     beta = backward(sentences, tags, fb_transition_model, fb_emission_model)
     print("Starting max")
-    maximize(alpha, beta, tags, sentences, fb_emission_model, fb_transition_model)
+    t = maximize(alpha, beta, tags, sentences, fb_emission_model, fb_transition_model)
     
 
 # TODO: add back in    
