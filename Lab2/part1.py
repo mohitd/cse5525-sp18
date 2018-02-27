@@ -213,7 +213,7 @@ avg_acc = 0.
 
 # run the forward-backward algorithm
 sentences = sentences[0:500]
-num_iter = 1 # TODO: set to 10 (or whatever) (or use convergence test instead)
+num_iter = 1 # set to 10 (or whatever) (or use convergence test instead)
 for i in range (0, num_iter):
     print("Starting alpha")
     alpha = forward(sentences, tags, fb_transition_model, fb_emission_model)
