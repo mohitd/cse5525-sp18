@@ -167,7 +167,7 @@ def maximize(alpha, beta, tags, sentences, emission, transition):
             tran_sums[tag1][tag2] = 0
             for sentence_num in range(1, len(alpha)):     
                 for word in range(len(sentences[sentence_num])):
-                    tran_sums[tag1][tag2] += (beta[sentence_num][word][tag2] 
+                    tran_sums[tag1][tag2] += (alpha[sentence_num-1][word][tag1] * beta[sentence_num][word][tag2] 
                     * transition[tag1][tag2] * emission[tag2][sentences[sentence_num][word]] 
                     / tot_prob)
             
