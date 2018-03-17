@@ -50,7 +50,7 @@ def create_filter_bank(sample_rate, nfilters=NUM_FILTERS, nfft=NFFT):
 
 def spectrum(signal, sample_rate, nfft=NFFT):
     # frame splitting
-    window_size = FRAME_SIZE * sample_rate
+    window_size = int(FRAME_SIZE * sample_rate)
     shift = FRAME_STRIDE * sample_rate
     starts = np.arange(0, signal.shape[-1] - window_size, shift)
     frames = np.zeros((starts.shape[-1], int(np.floor(nfft / 2 + 1))))
@@ -58,9 +58,8 @@ def spectrum(signal, sample_rate, nfft=NFFT):
     hamming = np.hamming(window_size)
 
     for c in np.arange(0, starts.shape[-1]):
-        start = starts[c]
+        start = int(starts[c])
         X = npfft.rfft(signal[start : start+window_size] * hamming, nfft)
-        print(X.shape)
         frames[c, :] = np.absolute(X) ** 2 / nfft
     return frames
 
