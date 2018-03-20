@@ -86,6 +86,9 @@ def euclidean(x, y):
     return np.linalg.norm(x-y)
 
 def dtw(x, y, dist=euclidean):
+    points = []
+    gx = 0
+    gy = 0
     m = len(x)
     n = len(y)
     D = np.zeros((m, n))
@@ -96,9 +99,14 @@ def dtw(x, y, dist=euclidean):
             idx = np.argmin([D[i-1, j], D[i-1, j-1], D[i,j-1]])
             if idx == 0:
                 B[i, j, 0] = -1
+                gx += 1
             elif idx == 1:
                 B[i, j, 0] = -1
                 B[i, j, 1] = -1
+                gx += 1
+                gy += 1
             else:
                 B[i, j, 1] = -1
-    return D[-1, -1], B
+                gy += 1
+            points.append([gx, gy])
+    return D[-1, -1], B, points

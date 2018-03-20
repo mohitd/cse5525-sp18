@@ -1,5 +1,6 @@
 import scipy.io.wavfile
 import mfcc_utils
+import matplotlib.pyplot as plt
 
 trainWavs = []
 testWavs = []
@@ -31,17 +32,7 @@ for i in range(0, len(trainWavs)):
     trainSpec.append(mfcc_utils.spectrum(trainWavs[i][1], trainWavs[i][0]))
     testSpec.append(mfcc_utils.spectrum(testWavs[i][1], testWavs[i][0]))
 
-# Compare distances between MFCC and log spectrum for a few pairs
-# First, two matched pairs
-print "Distance between 1a and 1b in MFCC representation: " + str(mfcc_utils.dtw(trainMFCC[0], testMFCC[0])[0])
-print "Distance between 1a and 1b in log spectrum representation: " + str(mfcc_utils.dtw(trainSpec[0], testSpec[0])[0])
-print "Distance between oa and ob in MFCC representation: " + str(mfcc_utils.dtw(trainMFCC[9], testMFCC[9])[0])
-print "Distance between oa and ob in log spectrum representation: " + str(mfcc_utils.dtw(trainSpec[9], testSpec[9])[0])
-# Then, two mismatched pairs
-print "Distance between 5a and 9b in MFCC representation: " + str(mfcc_utils.dtw(trainMFCC[4], testMFCC[8])[0])
-print "Distance between 5a and 9b in log spectrum representation: " + str(mfcc_utils.dtw(trainSpec[4], testSpec[8])[0])
-print "Distance between 8a and zb in MFCC representation: " + str(mfcc_utils.dtw(trainMFCC[7], testMFCC[10])[0])
-print "Distance between 8a and zb in log spectrum representation: " + str(mfcc_utils.dtw(trainSpec[7], testSpec[10])[0])
+
 
 # Classify test examples
 correctMFCC = 0
@@ -67,7 +58,19 @@ for i in range(0, len(testMFCC)):
         correctMFCC += 1
     if gtLabel == gtLabels[minIndexSpec]:
         correctSpec += 1
-    print 'Digit was ' + gtLabel + ' and MFCC prediction was ' + gtLabels[minIndexMFCC]
-    print 'Digit was ' + gtLabel + ' and log spectrum prediction was ' + gtLabels[minIndexSpec]
-print 'Accuracy with MFCC templates: ' + str(1.0 * correctMFCC / len(testMFCC))
-print 'Accuracy with log spectrum templates: ' + str(1.0 * correctSpec / len(testSpec))
+    print ('Digit was ' + gtLabel + ' and MFCC prediction was ' + gtLabels[minIndexMFCC])
+    print ('Digit was ' + gtLabel + ' and log spectrum prediction was ' + gtLabels[minIndexSpec])
+print ('Accuracy with MFCC templates: ' + str(1.0 * correctMFCC / len(testMFCC)))
+print ('Accuracy with log spectrum templates: ' + str(1.0 * correctSpec / len(testSpec)))
+
+#Visualization extension
+p = mfcc_utils.dtw(trainMFCC[8], trainMFCC[4])[2]
+x = [i[0] for i in p]
+y = [i[1] for i in p]
+plt.plot(x, y)
+plt.xlabel('Sample: 9a')
+plt.ylabel('Sample: 5a')
+plt.title('DTW 5a vs. 9a')
+plt.axes().get_xaxis().set_ticks([])
+plt.axes().get_yaxis().set_ticks([])
+plt.show()
