@@ -33,7 +33,6 @@ for i in range(0, len(trainWavs)):
     testSpec.append(mfcc_utils.spectrum(testWavs[i][1], testWavs[i][0]))
 
 
-
 # Classify test examples
 correctMFCC = 0
 correctSpec = 0
