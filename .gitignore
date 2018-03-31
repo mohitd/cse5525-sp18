@@ -1,1 +1,15 @@
 .DS_Store
+X_dev.npy
+X_test.npy
+X_train.npy
+Lab4/data/SOStr.txt
+Lab4/data/STree.txt
+Lab4/data/datasetSentences.txt
+Lab4/data/datasetSplit.txt
+Lab4/data/dictionary.txt
+Lab4/data/original_rt_snippets.txt
+Lab4/data/sentiment_labels.txt
+Lab4/glove/glove.6B.100d.txt
+y_dev.npy
+y_test.npy
+y_train.npy
