@@ -4,6 +4,7 @@ import csv
 
 from util import load_data, load_embeddings
 
+BINS = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 EMBEDDING_DIM = 100
 
 """
@@ -42,9 +43,15 @@ for i, sent in enumerate(raw_X_dev):
 np.save('X_dev.npy', X_dev)
 print('Saving X_dev')
 
-y_train = np.array(y_train)
-y_test = np.array(y_test)
-y_dev = np.array(y_dev)
+y_train = np.array(y_train).astype(np.float32)
+y_train = np.digitize(y_train, BINS).astype(np.uint8)
+
+y_test = np.array(y_test).astype(np.float32)
+y_test = np.digitize(y_test, BINS).astype(np.uint8)
+
+y_dev = np.array(y_dev).astype(np.float32)
+y_dev = np.digitize(y_dev, BINS).astype(np.uint8)
+
 np.save('y_train.npy', y_train)
 np.save('y_test.npy', y_test)
 np.save('y_dev.npy', y_dev)
