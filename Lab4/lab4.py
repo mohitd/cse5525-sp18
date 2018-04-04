@@ -2,9 +2,10 @@ import keras
 import numpy as np
 import csv
 
-from util import load_data, load_embeddings
+from util import load_data, load_embeddings, bin_sentiment
 
-BINS = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+from keras.utils import to_categorical
+
 EMBEDDING_DIM = 100
 
 """
@@ -44,13 +45,22 @@ np.save('X_dev.npy', X_dev)
 print('Saving X_dev')
 
 y_train = np.array(y_train).astype(np.float32)
-y_train = np.digitize(y_train, BINS).astype(np.uint8)
+for i in range(y_train.shape[0]):
+    y_train[i] = bin_sentiment(y_train[i])
+y_train = y_train.astype(np.uint8)
+y_train = to_categorical(y_train, NUM_CLASSES)
 
 y_test = np.array(y_test).astype(np.float32)
-y_test = np.digitize(y_test, BINS).astype(np.uint8)
+for i in range(y_test.shape[0]):
+    y_test[i] = bin_sentiment(y_test[i])
+y_test = y_test.astype(np.uint8)
+y_test = to_categorical(y_test, NUM_CLASSES)
 
 y_dev = np.array(y_dev).astype(np.float32)
-y_dev = np.digitize(y_dev, BINS).astype(np.uint8)
+for i in range(y_dev.shape[0]):
+    y_dev[i] = bin_sentiment(y_dev[i])
+y_dev = y_dev.astype(np.uint8)
+y_dev = to_categorical(y_dev, NUM_CLASSES)
 
 np.save('y_train.npy', y_train)
 np.save('y_test.npy', y_test)

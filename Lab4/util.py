@@ -80,3 +80,15 @@ def load_embeddings():
             vec = np.array(values[1:], dtype=np.float32)
             embedding[word] = vec
     return embedding
+
+def bin_sentiment(raw_score):
+    if 0.0 <= raw_score <= 0.2:
+        return 0
+    elif 0.2 < raw_score <= 0.4:
+        return 1 
+    elif 0.4 < raw_score <= 0.6:
+        return 2
+    elif 0.6 < raw_score <= 0.8:
+        return 3
+    elif 0.8 < raw_score <= 1.0:
+        return 4
