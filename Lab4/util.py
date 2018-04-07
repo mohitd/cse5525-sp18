@@ -73,7 +73,7 @@ def load_data():
 
 def load_embeddings():
     embedding = {}
-    with open('glove/glove.6B.100d.txt') as f:
+    with open('glove/glove.6B.100d.txt', encoding='utf-8') as f:
         for line in f:
             values = line.split()
             word = values[0]

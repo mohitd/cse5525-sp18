@@ -5,8 +5,13 @@ import csv
 from util import load_data, load_embeddings, bin_sentiment
 
 from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense, LSTM, MaxPooling1D, Flatten
+from keras.callbacks import EarlyStopping
+from keras.preprocessing.sequence import pad_sequences
 
 EMBEDDING_DIM = 100
+NUM_CLASSES = 5
 
 """
 Create and cache matrices for all sets
@@ -67,17 +72,44 @@ np.save('y_test.npy', y_test)
 np.save('y_dev.npy', y_dev)
 """
 
-X_train = np.load('X_train.npy')
-X_test = np.load('X_test.npy')
-X_dev = np.load('X_dev.npy')
+x_train = np.load('X_train.npy')
+x_test = np.load('X_test.npy')
+x_dev = np.load('X_dev.npy')
 y_train = np.load('y_train.npy')
 y_test = np.load('y_test.npy')
 y_dev = np.load('y_dev.npy')
 
-print(X_train.shape)
-print(X_test.shape)
-print(X_dev.shape)
+"""
+print(x_train.shape)
+print(x_test.shape)
+print(x_dev.shape)
 
 print(y_train.shape)
 print(y_test.shape)
 print(y_dev.shape)
+"""
+
+# Pad x test and dev data to match (100,100) shape of training data
+x_test = pad_sequences(x_test, maxlen=100, padding='post', value=0.0)
+x_dev = pad_sequences(x_dev, maxlen=100, padding='post', value=0.0)
+
+# Build model
+model = Sequential()
+model.add(LSTM(128, input_shape=(100,100), return_sequences=True))
+model.add(MaxPooling1D(pool_size=100))
+model.add(Flatten())
+model.add(Dense(5))
+
+model.compile(loss='categorical_crossentropy',
+              optimizer='rmsprop',
+              metrics=['accuracy'])
+
+# Train model
+model.fit(x_train, y_train, batch_size=256, epochs=10, callbacks=[EarlyStopping(monitor='loss', min_delta=0.01, patience=2, verbose=0)])
+
+# Calculate accuracy
+score = model.evaluate(x_test, y_test)
+
+# Print results
+print('Loss = ' + str(score[0]))
+print('Accuracy = ' + str(score[1]))
