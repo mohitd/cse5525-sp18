@@ -7,7 +7,7 @@ from util import load_data, load_embeddings, bin_sentiment
 from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, MaxPooling1D, Flatten
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, TensorBoard
 from keras.preprocessing.sequence import pad_sequences
 
 EMBEDDING_DIM = 100
@@ -105,7 +105,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 # Train model
-model.fit(x_train, y_train, batch_size=256, epochs=10, callbacks=[EarlyStopping(monitor='loss', min_delta=0.01, patience=2, verbose=0)])
+model.fit(x_train, y_train, batch_size=256, epochs=10, callbacks=[EarlyStopping(monitor='val_acc', min_delta=0.01, patience=3, verbose=0), TensorBoard()], validation_data=(x_dev, y_dev))
 
 # Calculate accuracy
 score = model.evaluate(x_test, y_test)
