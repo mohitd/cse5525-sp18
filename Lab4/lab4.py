@@ -7,7 +7,8 @@ from util import load_data, load_embeddings, bin_sentiment
 from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, MaxPooling1D, Flatten
-from keras.callbacks import EarlyStopping, TensorBoard
+from keras.callbacks import EarlyStopping
+from keras.optimizers import RMSprop, SGD
 from keras.preprocessing.sequence import pad_sequences
 
 EMBEDDING_DIM = 100
@@ -93,23 +94,32 @@ print(y_dev.shape)
 x_test = pad_sequences(x_test, maxlen=100, padding='post', value=0.0)
 x_dev = pad_sequences(x_dev, maxlen=100, padding='post', value=0.0)
 
-# Build model
-model = Sequential()
-model.add(LSTM(128, input_shape=(100,100), return_sequences=True))
-model.add(MaxPooling1D(pool_size=100))
-model.add(Flatten())
-model.add(Dense(5))
+# Test various learning rates
+learning_rates = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
+accuracies = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-model.compile(loss='categorical_crossentropy',
-              optimizer='rmsprop',
-              metrics=['accuracy'])
+for x in range(len(learning_rates)):
+    # Build model
+    model = Sequential()
+    model.add(LSTM(128, input_shape=(100,100), return_sequences=True))
+    model.add(MaxPooling1D(pool_size=100))
+    model.add(Flatten())
+    model.add(Dense(5))
 
-# Train model
-model.fit(x_train, y_train, batch_size=256, epochs=10, callbacks=[EarlyStopping(monitor='val_acc', min_delta=0.01, patience=3, verbose=0), TensorBoard()], validation_data=(x_dev, y_dev))
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=RMSprop(lr=learning_rates[x]),
+                  metrics=['accuracy'])
 
-# Calculate accuracy
-score = model.evaluate(x_test, y_test)
+    # Train model
+    model.fit(x_train, y_train, batch_size=256, epochs=10, callbacks=[EarlyStopping(monitor='val_acc', min_delta=0.01, patience=3, verbose=0)], validation_data=(x_dev, y_dev))
 
-# Print results
-print('Loss = ' + str(score[0]))
-print('Accuracy = ' + str(score[1]))
+    # Calculate accuracy
+    score = model.evaluate(x_test, y_test)
+    accuracies[x] = score[1]
+
+    # Print results
+    print('Loss = ' + str(score[0]))
+    print('Accuracy = ' + str(score[1]))
+
+for x in range(len(learning_rates)):
+    print('Learning rate ' + str(learning_rates[x]) + ' gives accuracy ' + str(accuracies[x]))
