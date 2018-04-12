@@ -97,10 +97,10 @@ x_dev = pad_sequences(x_dev, maxlen=100, padding='post', value=0.0)
 
 def build_model(lr=None):
     model = Sequential()
-    model.add(LSTM(128, input_shape=(100,100), return_sequences=True))
+    model.add(LSTM(512, input_shape=(100,100), return_sequences=True, dropout=0.4, recurrent_dropout=0.4))
     model.add(MaxPooling1D(pool_size=100))
     model.add(Flatten())
-    model.add(Dense(5))
+    model.add(Dense(5, activation='softmax'))
 
     if lr is None:
         model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
@@ -133,9 +133,9 @@ def lr_check():
 
 if __name__ == '__main__':
     model = build_model()
-    early_stopping = EarlyStopping(monitor='val_acc', min_delta=0.01, patience=3, verbose=0)
+    early_stopping = EarlyStopping(monitor='val_loss')
     tensorboard = TensorBoard()
-    model.fit(x_train, y_train, batch_size=256, epochs=10, callbacks=[early_stopping, tensorboard], validation_data=(x_dev, y_dev))
+    model.fit(x_train, y_train, batch_size=256, epochs=30, callbacks=[tensorboard], validation_data=(x_dev, y_dev))
 
     score = model.evaluate(x_test, y_test)
     print('Accuracy = ' + str(score[1]))
