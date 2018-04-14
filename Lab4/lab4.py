@@ -90,6 +90,7 @@ print(y_test.shape)
 print(y_dev.shape)
 """
 
+
 # Pad x test and dev data to match (100,100) shape of training data
 x_test = pad_sequences(x_test, maxlen=100, padding='post', value=0.0)
 x_dev = pad_sequences(x_dev, maxlen=100, padding='post', value=0.0)
@@ -98,6 +99,7 @@ x_dev = pad_sequences(x_dev, maxlen=100, padding='post', value=0.0)
 def build_model(lr=None):
     model = Sequential()
     model.add(LSTM(512, input_shape=(100,100), return_sequences=True, dropout=0.4, recurrent_dropout=0.4))
+    model.add(LSTM(256, return_sequences=True))
     model.add(MaxPooling1D(pool_size=100))
     model.add(Flatten())
     model.add(Dense(5, activation='softmax'))
