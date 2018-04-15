@@ -16,8 +16,9 @@ NUM_CLASSES = 5
 
 """
 Create and cache matrices for all sets
+If the numpy arrays have already been generated, please comment out.
 """
-"""
+
 (raw_X_train, raw_X_test, raw_X_dev), (y_train, y_test, y_dev) = load_data()
 embedding = load_embeddings()
 X_train = np.zeros((len(raw_X_train), len(max(raw_X_train)), EMBEDDING_DIM))
@@ -71,26 +72,20 @@ y_dev = to_categorical(y_dev, NUM_CLASSES)
 np.save('y_train.npy', y_train)
 np.save('y_test.npy', y_test)
 np.save('y_dev.npy', y_dev)
+
+"""
+If you have generated the numpy arrays above: 
+uncomment the section below, and comment out the section above.
 """
 
+"""
 x_train = np.load('X_train.npy')
 x_test = np.load('X_test.npy')
 x_dev = np.load('X_dev.npy')
 y_train = np.load('y_train.npy')
 y_test = np.load('y_test.npy')
 y_dev = np.load('y_dev.npy')
-
 """
-print(x_train.shape)
-print(x_test.shape)
-print(x_dev.shape)
-
-print(y_train.shape)
-print(y_test.shape)
-print(y_dev.shape)
-"""
-
-
 # Pad x test and dev data to match (100,100) shape of training data
 x_test = pad_sequences(x_test, maxlen=100, padding='post', value=0.0)
 x_dev = pad_sequences(x_dev, maxlen=100, padding='post', value=0.0)
