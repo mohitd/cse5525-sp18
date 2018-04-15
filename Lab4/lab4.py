@@ -6,7 +6,7 @@ from util import load_data, load_embeddings, bin_sentiment
 
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, MaxPooling1D, Flatten
+from keras.layers import Dense, LSTM, MaxPooling1D, Flatten, Conv1D, MaxPooling2D, GRU
 from keras.callbacks import EarlyStopping, TensorBoard
 from keras.optimizers import RMSprop, SGD
 from keras.preprocessing.sequence import pad_sequences
@@ -99,7 +99,6 @@ x_dev = pad_sequences(x_dev, maxlen=100, padding='post', value=0.0)
 def build_model(lr=None):
     model = Sequential()
     model.add(LSTM(512, input_shape=(100,100), return_sequences=True, dropout=0.4, recurrent_dropout=0.4))
-    model.add(LSTM(256, return_sequences=True))
     model.add(MaxPooling1D(pool_size=100))
     model.add(Flatten())
     model.add(Dense(5, activation='softmax'))
@@ -141,5 +140,4 @@ if __name__ == '__main__':
 
     score = model.evaluate(x_test, y_test)
     print('Accuracy = ' + str(score[1]))
-
 
